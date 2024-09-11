@@ -1,0 +1,41 @@
+{
+  "name": "bun-ts-userscript-starter",
+  "version": "0.0.1",
+  "description": "A Greasemonkey/Tampermonkey/Violentmonkey Bun + TypeScript boilerplate",
+  "module": "src/index.ts",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/genzj/bun-ts-userscript-starter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/genzj/bun-ts-userscript-starter/issues"
+  },
+  "homepage": "https://github.com/genzj/bun-ts-userscript-starter#readme",
+  "userscriptHeader": {
+    "@match": [
+      "http*://example.com/",
+      "http*://www.example.com/"
+    ],
+    "@grant": "none"
+  },
+  "author": "genzj",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/yargs": "^17.0.33",
+    "rimraf": "^6.0.1",
+    "type-fest": "^4.26.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "build": "bun build.ts",
+    "build:dev": "bun build.ts --dev",
+    "clean": "rimraf ./dist/"
+  },
+  "dependencies": {
+    "yargs": "^17.7.2"
+  }
+}
