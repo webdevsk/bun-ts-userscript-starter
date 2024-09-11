@@ -1,8 +1,15 @@
-/**
- * Import HTML as modules
- * https://stackoverflow.com/a/47705264/3323672
- */
+// Fix the TypeScript error
+// "Cannot find module './logo.svg' or its corresponding type declarations."
 declare module "*.html" {
   const content: string;
   export default content;
 }
+
+declare module "*.scss" {
+  const content: string;
+  export default content;
+}
+
+// Declare needed GM APIs.
+// Ref: https://www.tampermonkey.net/documentation.php?locale=en#api
+declare function GM_addStyle(code: string): HTMLStyleElement;

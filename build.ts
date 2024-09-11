@@ -1,3 +1,4 @@
+import styleLoader from "bun-style-loader";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -11,7 +12,7 @@ interface UserScriptHeader {
 
 type ExtendedPackageJson = PackageJson & {
   userscriptHeader: UserScriptHeader;
-}
+};
 
 interface ScriptOptions {
   entrypointPath: string;
@@ -61,7 +62,7 @@ export async function postBuildScript(options: ScriptOptions): Promise<void> {
   await fd.write(HEADER_BEGIN);
   for (const header in packageJson.userscriptHeader) {
     const value = packageJson.userscriptHeader[header];
-    for (const row of typeof value === "string" ? [value,] : value) {
+    for (const row of typeof value === "string" ? [value] : value) {
       await fd.write(`// ${header} ${row}\n`);
     }
   }
@@ -88,6 +89,7 @@ const build = await Bun.build({
   loader: {
     ".html": "text",
   },
+  plugins: [styleLoader()],
 });
 
 console.info(build);

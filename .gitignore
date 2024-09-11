@@ -118,7 +118,6 @@ out
 # Nuxt.js build / generate output
 
 .nuxt
-dist
 
 # Gatsby files
 
@@ -265,7 +264,6 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
 .cache/
@@ -306,4 +304,5 @@ dist
 .pnp.*
 
 # outputs
-/dist/
+/dist/*
+!/dist/bun-ts-userscript-starter.user.js

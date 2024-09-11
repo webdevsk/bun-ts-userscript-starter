@@ -1,5 +1,5 @@
-import "./scss/style.scss";
 import APP_HTML from "./html/main-content.html";
+import STYLES from "./scss/style.scss";
 
 class App {
   constructor() {
@@ -9,9 +9,9 @@ class App {
     );
   }
   private injectHTML(htmlContent: string) {
+    GM_addStyle(STYLES);
     document.querySelector("body")?.insertAdjacentHTML("afterbegin", htmlContent);
   }
 }
 
 const yourAppInstance = new App();
-console.log(yourAppInstance);
