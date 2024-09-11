@@ -39,7 +39,7 @@ export async function postBuildScript(options: ScriptOptions): Promise<void> {
   const url = (packageJson.repository as { url: string }).url
     .replace("git+", "")
     .replace(".git", "");
-  const updateUrl = `${url}/raw/master/dist/${distUserScript}`;
+  const updateUrl = `${url}/raw/main/dist/${distUserScript}`;
   const downloadUrl = updateUrl;
 
   const HEADER_BEGIN = `// ==UserScript==

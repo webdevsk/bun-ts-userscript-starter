@@ -5,8 +5,8 @@
 // @description  A Greasemonkey/Tampermonkey/Violentmonkey Bun + TypeScript boilerplate
 // @licence      MIT
 // @author       genzj
-// @updateURL    https://github.com/genzj/bun-ts-userscript-starter/raw/master/dist/bun-ts-userscript-starter.user.js
-// @downloadURL  https://github.com/genzj/bun-ts-userscript-starter/raw/master/dist/bun-ts-userscript-starter.user.js
+// @updateURL    https://github.com/genzj/bun-ts-userscript-starter/raw/main/dist/bun-ts-userscript-starter.user.js
+// @downloadURL  https://github.com/genzj/bun-ts-userscript-starter/raw/main/dist/bun-ts-userscript-starter.user.js
 // @match http*://example.com/
 // @match http*://www.example.com/
 // @grant GM_addStyle
