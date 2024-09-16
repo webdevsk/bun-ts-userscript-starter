@@ -18,4 +18,6 @@ bun run build:dev  # development mode without minification and with inline sourc
 ## TBD
 
 - [ ] better README
-- [ ] watch and autoreload for development
+- [x] watch and autoreload for development
+- [x] serve the generated userscript during watching
+- [ ] support serving with proper filename, update url and download url
