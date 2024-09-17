@@ -25,9 +25,28 @@ const logger = winston.createLogger({
   exitOnError: false,
 });
 
-interface UserScriptHeader {
+const MINIMAL_USER_SCRIPT_HEADER_ITEMS = [
+  "@name",
+  "@namespace",
+  "@version",
+  "@description",
+  "@license",
+  "@author",
+  "@updateURL",
+  "@downloadURL",
+] as const;
+
+const MINIMAL_USER_SCRIPT_HEADER_SET: Set<
+  (typeof MINIMAL_USER_SCRIPT_HEADER_ITEMS)[number]
+> = new Set(MINIMAL_USER_SCRIPT_HEADER_ITEMS);
+
+type MinimalUserScriptHeader = {
+  [K in typeof MINIMAL_USER_SCRIPT_HEADER_ITEMS[number]]: string[] | string;
+};
+
+type UserScriptHeader = MinimalUserScriptHeader & {
   [k: string]: string[] | string;
-}
+};
 
 type ExtendedPackageJson = PackageJson & {
   userscriptHeader: UserScriptHeader;
@@ -35,12 +54,11 @@ type ExtendedPackageJson = PackageJson & {
 
 interface ScriptOptions {
   entrypointPath: string;
+  headerOverride?: UserScriptHeader;
 }
 
-async function postBuildScript(options: ScriptOptions): Promise<void> {
-  const { entrypointPath } = options;
+function generateHeader(): UserScriptHeader {
   const packageJsonPath = "./package.json";
-
   const packageJson: ExtendedPackageJson = require(packageJsonPath);
 
   if (
@@ -61,28 +79,62 @@ async function postBuildScript(options: ScriptOptions): Promise<void> {
   const updateUrl = `${url}/raw/main/dist/${distUserScript}`;
   const downloadUrl = updateUrl;
 
-  const HEADER_BEGIN = `// ==UserScript==
-// @name         ${packageJson.name}
-// @namespace    ${url}
-// @version      ${packageJson.version}
-// @description  ${packageJson.description}
-// @licence      ${packageJson.license}
-// @author       ${packageJson.author}
-// @updateURL    ${updateUrl}
-// @downloadURL  ${downloadUrl}
-`;
-  const HEADER_END = `// ==/UserScript==
+  const defaultHeader: MinimalUserScriptHeader = {
+    "@name": packageJson.name,
+    "@namespace": url,
+    "@version": packageJson.version,
+    "@description": packageJson.description,
+    "@license": packageJson.license,
+    "@author": packageJson.author.toString(),
+    "@updateURL": updateUrl,
+    "@downloadURL": downloadUrl,
+  };
+  const header: UserScriptHeader = {
+    ...defaultHeader,
+  };
 
-`;
+  for (const key in packageJson.userscriptHeader) {
+    const value = packageJson.userscriptHeader[key];
+    if (typeof key !== "string") {
+      logger.warn(`ignore non-string key in userscript header: "${key}"="${value}"`)
+    };
 
+    header[key] = value;
+  }
+  return header;
+}
+
+async function postBuildScript(options: ScriptOptions): Promise<void> {
+  const { entrypointPath, headerOverride = {} } = options;
+  const header: UserScriptHeader = {
+    ...generateHeader(),
+    ...headerOverride,
+  };
+
+  const longestHeaderChar = Math.max(...Object.keys(header).map(k => k.length));
+
+  const HEADER_BEGIN = "// ==UserScript==\n";
+  const HEADER_END = "// ==/UserScript==\n\n";
+
+  const distUserScript = `${header["@name"]}.user.js`;
   const outputPath = `${path.dirname(entrypointPath)}/${distUserScript}`;
   const data = await Bun.file(entrypointPath).text();
   let output = HEADER_BEGIN;
 
-  for (const header in packageJson.userscriptHeader) {
-    const value = packageJson.userscriptHeader[header];
+  for (const key of MINIMAL_USER_SCRIPT_HEADER_ITEMS) {
+    const value = header[key];
     for (const row of typeof value === "string" ? [value] : value) {
-      output += `// ${header} ${row}\n`;
+      output += `// ${key.padEnd(longestHeaderChar)}  ${row}\n`;
+    }
+  }
+
+  for (const key in header) {
+    if (MINIMAL_USER_SCRIPT_HEADER_SET.has(key as any)) {
+      continue;
+    }
+    const value = header[key];
+    for (const row of typeof value === "string" ? [value] : value) {
+      output += `// ${key.padEnd(longestHeaderChar)}  ${row}\n`;
     }
   }
   output += HEADER_END;
