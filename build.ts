@@ -40,8 +40,9 @@ const MINIMAL_USER_SCRIPT_HEADER_SET: Set<
   (typeof MINIMAL_USER_SCRIPT_HEADER_ITEMS)[number]
 > = new Set(MINIMAL_USER_SCRIPT_HEADER_ITEMS);
 
+
 type MinimalUserScriptHeader = {
-  [K in typeof MINIMAL_USER_SCRIPT_HEADER_ITEMS[number]]: string[] | string;
+  [K in (typeof MINIMAL_USER_SCRIPT_HEADER_ITEMS)[number]]: string[] | string;
 };
 
 type UserScriptHeader = MinimalUserScriptHeader & {
@@ -52,40 +53,34 @@ type ExtendedPackageJson = PackageJson & {
   userscriptHeader: UserScriptHeader;
 };
 
-interface ScriptOptions {
-  entrypointPath: string;
-  headerOverride?: UserScriptHeader;
-}
+const PACKAGE_JSON: ExtendedPackageJson = require("./package.json");
 
 function generateHeader(): UserScriptHeader {
-  const packageJsonPath = "./package.json";
-  const packageJson: ExtendedPackageJson = require(packageJsonPath);
-
   if (
-    !packageJson.name ||
-    !packageJson.version ||
-    !packageJson.description ||
-    !packageJson.license ||
-    !packageJson.author ||
-    !packageJson.repository
+    !PACKAGE_JSON.name ||
+    !PACKAGE_JSON.version ||
+    !PACKAGE_JSON.description ||
+    !PACKAGE_JSON.license ||
+    !PACKAGE_JSON.author ||
+    !PACKAGE_JSON.repository
   ) {
     throw new Error("Missing required fields in package.json");
   }
 
-  const distUserScript = `${packageJson.name}.user.js`;
-  const url = (packageJson.repository as { url: string }).url
+  const distUserScript = `${PACKAGE_JSON.name}.user.js`;
+  const url = (PACKAGE_JSON.repository as { url: string }).url
     .replace("git+", "")
     .replace(".git", "");
   const updateUrl = `${url}/raw/main/dist/${distUserScript}`;
   const downloadUrl = updateUrl;
 
   const defaultHeader: MinimalUserScriptHeader = {
-    "@name": packageJson.name,
+    "@name": PACKAGE_JSON.name,
     "@namespace": url,
-    "@version": packageJson.version,
-    "@description": packageJson.description,
-    "@license": packageJson.license,
-    "@author": packageJson.author.toString(),
+    "@version": PACKAGE_JSON.version,
+    "@description": PACKAGE_JSON.description,
+    "@license": PACKAGE_JSON.license,
+    "@author": PACKAGE_JSON.author.toString(),
     "@updateURL": updateUrl,
     "@downloadURL": downloadUrl,
   };
@@ -93,30 +88,44 @@ function generateHeader(): UserScriptHeader {
     ...defaultHeader,
   };
 
-  for (const key in packageJson.userscriptHeader) {
-    const value = packageJson.userscriptHeader[key];
+  for (const key in PACKAGE_JSON.userscriptHeader) {
+    const value = PACKAGE_JSON.userscriptHeader[key];
     if (typeof key !== "string") {
-      logger.warn(`ignore non-string key in userscript header: "${key}"="${value}"`)
-    };
+      logger.warn(
+        `ignore non-string key in userscript header: "${key}"="${value}"`
+      );
+    }
 
     header[key] = value;
   }
   return header;
 }
 
-async function postBuildScript(options: ScriptOptions): Promise<void> {
-  const { entrypointPath, headerOverride = {} } = options;
+interface PostBuildOption {
+  entrypointPath: string;
+  buildSuffix?: string;
+  headerOverride?: UserScriptHeader;
+}
+
+async function postBuildScript(options: PostBuildOption): Promise<string> {
+  const { entrypointPath, buildSuffix, headerOverride = {} } = options;
   const header: UserScriptHeader = {
     ...generateHeader(),
     ...headerOverride,
   };
 
-  const longestHeaderChar = Math.max(...Object.keys(header).map(k => k.length));
+  if (buildSuffix) {
+    header["@version"] += `.${buildSuffix}`;
+  }
+
+  const longestHeaderChar = Math.max(
+    ...Object.keys(header).map((k) => k.length)
+  );
 
   const HEADER_BEGIN = "// ==UserScript==\n";
   const HEADER_END = "// ==/UserScript==\n\n";
 
-  const distUserScript = `${header["@name"]}.user.js`;
+  const distUserScript = `${PACKAGE_JSON.name}.user.js`;
   const outputPath = `${path.dirname(entrypointPath)}/${distUserScript}`;
   const data = await Bun.file(entrypointPath).text();
   let output = HEADER_BEGIN;
@@ -142,14 +151,19 @@ async function postBuildScript(options: ScriptOptions): Promise<void> {
 
   await Bun.write(outputPath, output);
   logger.info(`Successfully added the header to the userscript ${outputPath}!`);
+  return outputPath;
 }
 
-interface BuildOptions {
+interface BuildOption {
   dev?: boolean;
 }
 
-async function build(params: BuildOptions) {
-  const { dev = false } = params;
+interface BuildOutput {
+  readonly userscriptPath: string;
+}
+
+async function build(option: BuildOption): Promise<BuildOutput> {
+  const { dev = false } = option;
   const entrypoint = "./src/index.ts";
 
   logger.info(`Building ${entrypoint}`);
@@ -178,20 +192,26 @@ async function build(params: BuildOptions) {
     throw new Error("Cannot find entrypoint in built artifacts.");
   }
 
-  await postBuildScript({ entrypointPath });
+  const outputPath = await postBuildScript({
+    entrypointPath,
+    buildSuffix: dev ? Date.now().toString() : undefined,
+  });
+  return {
+    userscriptPath: outputPath,
+  };
 }
 
 interface Watcher {
   close: () => void;
 }
 
-function watch(params: BuildOptions): Watcher {
+function watch(option: BuildOption): Watcher {
   let stopped: boolean = false;
   const watchPath = `${import.meta.dir}/src`;
   const watcher = fswatch(watchPath, { recursive: true }, (event, filename) => {
     if (stopped) return;
     logger.info(`Detected ${event} in ${filename}`);
-    build(params);
+    build(option);
   });
   logger.info(`Watching path ${watchPath}`);
   return {
@@ -203,22 +223,26 @@ function watch(params: BuildOptions): Watcher {
   };
 }
 
+interface ServerOption {
+  userscriptPath: string;
+}
+
 interface Server {
   close: () => void;
 }
 
-function serve(): Server {
+function serve(option: ServerOption): Server {
+  const { userscriptPath } = option;
+  const urlPath = `/${path.basename(userscriptPath)}`;
   const server = Bun.serve({
     static: {
-      "/": Response.redirect("/script.user.js"),
+      "/": Response.redirect(urlPath),
     },
     async fetch(req) {
       const url = new URL(req.url);
-      if (url.pathname === "/script.user.js")
-        return new Response(
-          Bun.file("./dist/bun-ts-userscript-starter.user.js")
-        );
-      return new Response("404!");
+      if (url.pathname === urlPath)
+        return new Response(Bun.file(userscriptPath));
+      return Response.redirect("https://http.cat/404");
     },
   });
   logger.info(`Listening on http://${server.hostname}:${server.port}/`);
@@ -252,22 +276,22 @@ async function main() {
     })
     .parse();
 
-  const params: BuildOptions = {
+  const option: BuildOption = {
     dev: argv.dev,
   };
 
   // initial building is always needed, even for watching build
-  await build(params);
+  const { userscriptPath } = await build(option);
 
   if (argv.server) {
-    const s = serve();
+    const s = serve({ userscriptPath });
     process.on("SIGINT", () => {
       s.close();
     });
   }
 
   if (argv.watch) {
-    const w = watch(params);
+    const w = watch(option);
     process.on("SIGINT", () => {
       w.close();
     });
