@@ -63,3 +63,7 @@ Customize the userscript metadata through the `userscriptHeader` field in `packa
 ## Acknowledgements
 
 This project draws significant inspiration from the [Greasemonkey Webpack + TypeScript boilerplate](https://github.com/tarkant/greasemonkey-webpack-typescript-boilerplate).
+
+## ⏲ Changelog
+
+* v1.0.0: First release
