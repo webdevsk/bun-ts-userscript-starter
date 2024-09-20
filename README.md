@@ -58,7 +58,8 @@ Customize the userscript metadata through the `userscriptHeader` field in `packa
 * [x] Implement watch and auto-reload for development
 * [x] Serve the generated userscript during watch mode
 * [x] Support serving with proper filename, update URL, and download URL
-* [ ] Add GitHub Action for automated releases
+* [x] Add GitHub Action for automated releases
+* [ ] Import icon and generate base64 for `@icon`
 
 ## Acknowledgements
 
@@ -66,4 +67,5 @@ This project draws significant inspiration from the [Greasemonkey Webpack + Type
 
 ## ⏲ Changelog
 
+* v1.0.1: Add GitHub Action
 * v1.0.0: First release
