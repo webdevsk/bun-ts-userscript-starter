@@ -106,5 +106,6 @@ This project draws significant inspiration from the [Greasemonkey Webpack + Type
 
 ## ⏲ Changelog
 
+* v1.0.2: Add release channel supports
 * v1.0.1: Add GitHub Action
 * v1.0.0: First release
