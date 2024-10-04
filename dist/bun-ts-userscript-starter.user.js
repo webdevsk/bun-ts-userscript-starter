@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bun-ts-userscript-starter
 // @namespace    https://github.com/genzj/bun-ts-userscript-starter
-// @version      1.0.0
+// @version      1.0.1
 // @description  A Greasemonkey/Tampermonkey/Violentmonkey Bun + TypeScript boilerplate
 // @license      MIT
 // @author       genzj
