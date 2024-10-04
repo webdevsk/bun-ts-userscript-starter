@@ -32,14 +32,11 @@ const MINIMAL_USER_SCRIPT_HEADER_ITEMS = [
   "@description",
   "@license",
   "@author",
-  "@updateURL",
-  "@downloadURL",
 ] as const;
 
 const MINIMAL_USER_SCRIPT_HEADER_SET: Set<
   (typeof MINIMAL_USER_SCRIPT_HEADER_ITEMS)[number]
 > = new Set(MINIMAL_USER_SCRIPT_HEADER_ITEMS);
-
 
 type MinimalUserScriptHeader = {
   [K in (typeof MINIMAL_USER_SCRIPT_HEADER_ITEMS)[number]]: string[] | string;
@@ -53,9 +50,36 @@ type ExtendedPackageJson = PackageJson & {
   userscriptHeader: UserScriptHeader;
 };
 
+const VALID_RELEASE_CHANNELS = [
+  "GitHubRelease",
+  "GitCommit",
+  "OutOfBand",
+] as const;
+
+type ReleaseChannel = (typeof VALID_RELEASE_CHANNELS)[number];
+
 const PACKAGE_JSON: ExtendedPackageJson = require("./package.json");
 
-function generateHeader(): UserScriptHeader {
+function generateReleaseURL(
+  releaseChannel: ReleaseChannel,
+  inputs: { repoURL: string; name: string }
+): string {
+  if (releaseChannel === "OutOfBand") {
+    return "";
+  }
+
+  const distUserScript = `${inputs.name}.user.js`;
+  const url = inputs.repoURL.replace("git+", "").replace(".git", "");
+
+  if (releaseChannel === "GitCommit") {
+    return `${url}/raw/main/dist/${distUserScript}`;
+  } else if (releaseChannel === "GitHubRelease") {
+    return `${url}/releases/latest/download/${distUserScript}`;
+  }
+  throw new Error(`invalid release channel ${releaseChannel}`);
+}
+
+function generateHeader(releaseChannel: ReleaseChannel): UserScriptHeader {
   if (
     !PACKAGE_JSON.name ||
     !PACKAGE_JSON.version ||
@@ -74,6 +98,18 @@ function generateHeader(): UserScriptHeader {
   const updateUrl = `${url}/raw/main/dist/${distUserScript}`;
   const downloadUrl = updateUrl;
 
+  const releaseURL = generateReleaseURL(releaseChannel, {
+    name: PACKAGE_JSON.name,
+    repoURL: (PACKAGE_JSON.repository as { url: string }).url,
+  });
+
+  const releaseHeader = releaseURL
+    ? {
+        "@updateURL": releaseURL,
+        "@downloadURL": releaseURL,
+      }
+    : null;
+
   const defaultHeader: MinimalUserScriptHeader = {
     "@name": PACKAGE_JSON.name,
     "@namespace": url,
@@ -81,11 +117,10 @@ function generateHeader(): UserScriptHeader {
     "@description": PACKAGE_JSON.description,
     "@license": PACKAGE_JSON.license,
     "@author": PACKAGE_JSON.author.toString(),
-    "@updateURL": updateUrl,
-    "@downloadURL": downloadUrl,
   };
   const header: UserScriptHeader = {
     ...defaultHeader,
+    ...releaseHeader,
   };
 
   for (const key in PACKAGE_JSON.userscriptHeader) {
@@ -103,6 +138,7 @@ function generateHeader(): UserScriptHeader {
 
 interface PostBuildOption {
   entrypointPath: string;
+  releaseChannel: ReleaseChannel;
   buildSuffix?: string;
   headerOverride?: UserScriptHeader;
 }
@@ -110,7 +146,7 @@ interface PostBuildOption {
 async function postBuildScript(options: PostBuildOption): Promise<string> {
   const { entrypointPath, buildSuffix, headerOverride = {} } = options;
   const header: UserScriptHeader = {
-    ...generateHeader(),
+    ...generateHeader(options.releaseChannel),
     ...headerOverride,
   };
 
@@ -156,6 +192,7 @@ async function postBuildScript(options: PostBuildOption): Promise<string> {
 
 interface BuildOption {
   dev?: boolean;
+  releaseChannel?: ReleaseChannel;
 }
 
 interface BuildOutput {
@@ -163,7 +200,7 @@ interface BuildOutput {
 }
 
 async function build(option: BuildOption): Promise<BuildOutput> {
-  const { dev = false } = option;
+  const { dev = false, releaseChannel = "GitCommit" } = option;
   const entrypoint = "./src/index.ts";
 
   logger.info(`Building ${entrypoint}`);
@@ -194,6 +231,7 @@ async function build(option: BuildOption): Promise<BuildOutput> {
 
   const outputPath = await postBuildScript({
     entrypointPath,
+    releaseChannel,
     buildSuffix: dev ? Date.now().toString() : undefined,
   });
   return {
@@ -274,10 +312,16 @@ async function main() {
         "Watch src folder and build whenever change happens to its files",
       default: false,
     })
+    .option("release-channel", {
+      type: "string",
+      choices: VALID_RELEASE_CHANNELS,
+      default: "GitCommit",
+    })
     .parse();
 
   const option: BuildOption = {
     dev: argv.dev,
+    releaseChannel: argv.releaseChannel as ReleaseChannel,
   };
 
   // initial building is always needed, even for watching build

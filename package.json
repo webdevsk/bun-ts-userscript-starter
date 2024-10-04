@@ -38,6 +38,7 @@
     "build": "bun build.ts",
     "build:dev": "bun build.ts --dev",
     "build:watch": "bun build.ts --dev --watch",
+    "build:workflow": "bun build.ts --release-channel GitHubRelease",
     "clean": "rimraf ./dist/",
     "dev": "bun build.ts --dev --server --watch"
   },

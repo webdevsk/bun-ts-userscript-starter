@@ -30,8 +30,6 @@ Create powerful Xmonkey (Greasemonkey/Tampermonkey/Violentmonkey/...) userscript
 
 5. Every time you update your code, the `bun dev` command will rebuild the userscript. You'll need to update or reinstall the script either from your Xmonkey dashboard or by refreshing <http://localhost:3000>.
 
-6. To release your changes, stop the dev server (if running) by pressing `Ctrl+C`. Then run `bun run build` and commit and push the `dist/*.user.js` file.
-
 ## Building
 
 ```bash
@@ -46,6 +44,47 @@ bun run build:watch
 
 # View additional building options
 bun run build.ts --help
+```
+
+## Release Your Script
+
+### Option 1: By GitHub Release
+
+Pushing a tag to GitHub triggers the workflow that builds and creates the
+corresponding release. The release is initially created as a draft and
+prerelease, allowing you to test it before publishing it to users. To adjust
+this behavior, edit the `Release` step in
+`.github/workflows/publish-release-action.yml`.
+
+With this option, the `build.ts` script sets `updateURL` and `downloadURL` to
+the artifact of the latest release, e.g.,
+`https://github.com/genzj/bun-ts-userscript-starter/releases/latest/download/bun-ts-userscript-starter.user.js`.
+Share this link with users for installing or upgrading to the latest version.
+
+### Option 2: By Git Commit
+
+If GitHub Actions are not an option (e.g., if you're using a self-hosted
+repository), you can commit the release builds directly. First, stop the dev
+server (if running) by pressing `Ctrl+C`. Then, run `bun run build` and commit
+and push the `dist/*/*.user.js` file to the repo.
+
+In this case, the `build.ts` script will set `updateURL` and `downloadURL` to
+the raw file in your repository, e.g.,
+`https://github.com/genzj/bun-ts-userscript-starter/raw/main/dist/bun-ts-userscript-starter.user.js`.
+You may need to update `build.ts` if your repository is hosted outside GitHub,
+or use the Option 3 below.
+
+### Option 3: Out Of Band (Handle Release Yourself)
+
+For other release channels, override the `updateURL` and `downloadURL` to point
+to your actual release URL. To do this, edit the `userscriptHeader` section in
+`package.json`, for example:
+
+```json
+"userscriptHeader": {
+    "@updateURL": "https://g3r.top/bun-ts-userscript",
+    "@downloadURL": "https://g3r.top/bun-ts-userscript"
+},
 ```
 
 ## Updating the Userscript Metadata Block
