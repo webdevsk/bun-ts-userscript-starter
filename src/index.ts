@@ -3,7 +3,6 @@ import STYLES from "./scss/style.scss";
 
 class App {
   constructor() {
-    // Write your script here
     this.injectHTML(APP_HTML);
     console.log(
       "If you see this message, it means that the script has been injected :)"

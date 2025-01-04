@@ -1,4 +1,5 @@
 import { ScriptGetInfo } from "../types/GM_info";
+import type { GMxmlhttpRequestObject } from "../types/GM_xmlhttpRequest"
 
 type JSONSerializable =
   | string
@@ -45,7 +46,7 @@ declare global {
   */
   declare const unsafeWindow: Window;
 
-  /**Get some info about the script and TM */
+  /**Get some info about the script and script manager*/
   declare function GM_info(): ScriptGetInfo;
 
   /**
@@ -138,4 +139,9 @@ declare global {
     attributes?: Record<string, string>
   ): HTMLElementTagNameMap[K];
 
+ /**Makes a request like XMLHttpRequest, with some special capabilities, not restricted by same-origin policy. */
+ declare function GM_xmlhttpRequest(details: GMxmlhttpRequestObject): {abort: () => void};
+
+
 }
+
