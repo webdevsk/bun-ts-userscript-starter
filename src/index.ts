@@ -9,7 +9,7 @@ class App {
     );
   }
   private injectHTML(htmlContent: string) {
-    GM_addStyle(STYLES);
+    AM.addStyle(STYLES);
     document.querySelector("body")?.insertAdjacentHTML("afterbegin", htmlContent);
   }
 }
