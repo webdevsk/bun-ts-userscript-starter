@@ -17,6 +17,7 @@
       "http*://example.com/",
       "http*://www.example.com/"
     ],
+    "@require": "https://raw.githubusercontent.com/webdevsk/AM-userscript-library/refs/heads/main/AM-userscript-library.user.js",
     "@grant": "GM_addStyle"
   },
   "author": "genzj",
