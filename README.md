@@ -4,10 +4,10 @@ Create powerful Xmonkey (Greasemonkey/Tampermonkey/Violentmonkey/...) userscript
 
 ## Features
 
-* Full TypeScript support
-* SCSS and HTML injection capabilities
-* Automatic generation of the [userscript metadata block](https://violentmonkey.github.io/api/metadata-block/) based on package information
-* Local development server with watching-building for seamless development
+- Full TypeScript support
+- SCSS and HTML injection capabilities
+- Automatic generation of the [userscript metadata block](https://violentmonkey.github.io/api/metadata-block/) based on package information
+- Local development server with watching-building for seamless development
 
 ## Getting Started
 
@@ -15,16 +15,16 @@ Create powerful Xmonkey (Greasemonkey/Tampermonkey/Violentmonkey/...) userscript
 
 2. Create a new project using this template:
 
-    ```sh
-    bun create genzj/bun-ts-userscript-starter my-awesome-userscript
-    cd my-awesome-userscript
-    ```
+   ```sh
+   bun create webdevsk/bun-ts-userscript-starter my-awesome-userscript
+   cd my-awesome-userscript
+   ```
 
 3. Start the development server:
 
-    ```sh
-    bun dev
-    ```
+   ```sh
+   bun dev
+   ```
 
 4. Open <http://localhost:3000> in your browser to install the built userscript. This template includes an example that injects into <https://example.com>, so you can visit that site to verify the installation.
 
@@ -93,12 +93,12 @@ Customize the userscript metadata through the `userscriptHeader` field in `packa
 
 ## Roadmap
 
-* [x] Improve README documentation
-* [x] Implement watch and auto-reload for development
-* [x] Serve the generated userscript during watch mode
-* [x] Support serving with proper filename, update URL, and download URL
-* [x] Add GitHub Action for automated releases
-* [ ] Import icon and generate base64 for `@icon`
+- [x] Improve README documentation
+- [x] Implement watch and auto-reload for development
+- [x] Serve the generated userscript during watch mode
+- [x] Support serving with proper filename, update URL, and download URL
+- [x] Add GitHub Action for automated releases
+- [ ] Import icon and generate base64 for `@icon`
 
 ## Acknowledgements
 
@@ -106,6 +106,6 @@ This project draws significant inspiration from the [Greasemonkey Webpack + Type
 
 ## ⏲ Changelog
 
-* v1.0.2: Add release channel supports
-* v1.0.1: Add GitHub Action
-* v1.0.0: First release
+- v1.0.2: Add release channel supports
+- v1.0.1: Add GitHub Action
+- v1.0.0: First release
