@@ -1,17 +1,28 @@
-import APP_HTML from "./html/main-content.html";
-import STYLES from "./scss/style.scss";
+import { createLocationWatcher } from "../utils/location-change.event"
+import { watchForSelectorsPromise } from "../utils/watch-for-selectors"
+import APP_HTML from "./html/main-content.html"
+import STYLES from "./scss/style.scss"
 
-class App {
-  constructor() {
-    this.injectHTML(APP_HTML);
-    console.log(
-      "If you see this message, it means that the script has been injected :)"
-    );
-  }
-  private injectHTML(htmlContent: string) {
-    AM.addStyle(STYLES);
-    document.querySelector("body")?.insertAdjacentHTML("afterbegin", htmlContent);
-  }
-}
+createLocationWatcher().run()
+AM.addStyle(STYLES)
 
-const yourAppInstance = new App();
+const ctrl = new AbortController()
+
+window.addEventListener("spa:locationchange", async (event) => {
+  if (event.detail.newUrl.href !== "/target/page") {
+    ctrl.abort()
+    return
+  }
+
+  await watchForSelectorsPromise(["#some-elm-that-appears-later"], { signal: ctrl.signal })
+
+  console.log("#some-elm-that-appears-later is present")
+  const emptyDiv = document.createElement("div")
+  emptyDiv.insertAdjacentHTML("afterbegin", APP_HTML)
+  document.querySelector("#some-elm-that-appears-later")!.appendChild(emptyDiv)
+
+  ctrl.signal.addEventListener("abort", () => {
+    // Run cleanup code here like removing DOM elements and aborting event listeners
+    emptyDiv.parentElement?.removeChild(emptyDiv)
+  })
+})

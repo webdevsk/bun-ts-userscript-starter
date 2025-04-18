@@ -71,7 +71,7 @@ declare global {
     key?: null,
     defaultValue: T
   ): Promise<T>;
-  getValue(key?: string): Promise<any>;
+  getValue(key?: string): Promise<unknown>;
   getValue(): Promise<undefined>;
 
     /**setValue
