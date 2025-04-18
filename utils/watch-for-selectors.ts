@@ -70,6 +70,11 @@ export function watchForSelectors(
     throw new Error("watchForSelectors: Resolver must be a function that resolves to boolean")
 
   // Main logic
+  const elements = selectors.map((selector) => document.querySelector<Element>(selector))
+  if (options?.resolver?.(elements) ?? elements.every((elm) => elm !== null)) {
+    callback()
+    return () => null
+  }
   const observer = new MutationObserver((_, observer) => {
     const elements = selectors.map((selector) => document.querySelector<Element>(selector))
     if (options?.resolver?.(elements) ?? elements.every((elm) => elm !== null)) {
