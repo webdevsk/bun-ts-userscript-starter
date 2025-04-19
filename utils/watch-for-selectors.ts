@@ -60,7 +60,7 @@ export function watchForSelectors(
   selectors: readonly string[],
   /** Callback to run when selectors are found */
   callback: () => void,
-  options?: WatchForSelectorOptions
+  options: WatchForSelectorOptions = {}
 ): AbortWatcher {
   // Input checks
   if (!Array.isArray(selectors)) throw new Error("watchForSelectors: Selectors must be an array")
@@ -71,19 +71,19 @@ export function watchForSelectors(
 
   // Main logic
   const elements = selectors.map((selector) => document.querySelector<Element>(selector))
-  if (options?.resolver?.(elements) ?? elements.every((elm) => elm !== null)) {
+  if (options.resolver?.(elements) ?? elements.every((elm) => elm !== null)) {
     callback()
     return () => null
   }
   const observer = new MutationObserver((_, observer) => {
     const elements = selectors.map((selector) => document.querySelector<Element>(selector))
-    if (options?.resolver?.(elements) ?? elements.every((elm) => elm !== null)) {
+    if (options.resolver?.(elements) ?? elements.every((elm) => elm !== null)) {
       observer.disconnect()
       callback()
     }
   })
   observer.observe(options.target ?? document, options.observerOptions ?? { childList: true, subtree: true })
-  options?.signal?.addEventListener("abort", observer.disconnect)
+  options.signal?.addEventListener("abort", observer.disconnect)
   return observer.disconnect
 }
 
@@ -99,10 +99,10 @@ export function watchForSelectors(
 export function watchForSelectorsPromise(
   /** Selector to watch for */
   selectors: readonly string[],
-  options?: WatchForSelectorOptions
+  options: WatchForSelectorOptions = {}
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     watchForSelectors(selectors, resolve, options)
-    options?.signal?.addEventListener("abort", () => reject(new Error("Aborted by signal")))
+    options.signal?.addEventListener("abort", () => reject(new Error("Aborted by signal")))
   })
 }
