@@ -1,11 +1,10 @@
 import styleLoader from "bun-style-loader"
-import { watch as fswatch } from "fs"
+import { watch as fswatch, readFileSync } from "fs"
 import winston from "winston"
 import yargs from "yargs"
 import { hideBin } from "yargs/helpers"
 
 import path from "path"
-// import type { PackageJson } from "type-fest"
 
 const consoleTransport = new winston.transports.Console()
 const logger = winston.createLogger({
@@ -101,7 +100,7 @@ function generateHeader(releaseChannel: ReleaseChannel): UserScriptHeader {
 
   const defaultHeader: MinimalUserScriptHeader = {
     "@name": PACKAGE_JSON.name,
-    "@namespace": url,
+    "@namespace": url || PACKAGE_JSON.name,
     "@version": PACKAGE_JSON.version,
     "@description": PACKAGE_JSON.description,
     "@license": PACKAGE_JSON.license,
@@ -118,7 +117,9 @@ function generateHeader(releaseChannel: ReleaseChannel): UserScriptHeader {
       logger.warn(`ignore non-string key in userscript header: "${key}"="${value}"`)
     }
 
-    header[key] = value
+    if (value !== null) {
+      header[key] = value
+    }
   }
   return header
 }
@@ -189,16 +190,28 @@ async function build(option: BuildOption): Promise<BuildOutput> {
   const { dev = false, releaseChannel = "GitCommit" } = option
   const entrypoint = "./src/index.ts"
 
+  // Check if entrypoint has exports
+  const indexContent = readFileSync(entrypoint, 'utf-8');
+  const hasExports = /^export\s+/m.test(indexContent);
+
+  if (hasExports) {
+    console.error('❌ Error: index.ts should not contain exports. Move exports to separate files.');
+    process.exit(1);
+  }
+
   logger.info(`Building ${entrypoint}`)
   const build = await Bun.build({
     entrypoints: [entrypoint],
     outdir: "./dist",
-    minify: !dev,
+    minify: false,
     sourcemap: dev ? "inline" : undefined,
     loader: {
       ".html": "text",
     },
     plugins: [styleLoader()],
+    target: "browser",
+    format: "esm"
+
   })
 
   logger.info(Bun.inspect(build, { colors: true }))

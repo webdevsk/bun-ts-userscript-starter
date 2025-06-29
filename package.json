@@ -1,58 +1,53 @@
 {
   "name": "bun-ts-userscript-starter",
-  "version": "1.0.2",
-  "author": "anonymous",
+  "version": "1.00",
+  "author": "https://github.com/webdevsk",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/genzj/bun-ts-userscript-starter.git"
+    "url": "",
+    "sample-url": "git+https://github.com/webdevsk/bun-ts-userscript-starter.git"
   },
   "module": "src/index.ts",
   "devDependencies": {
-    "@types/bun": "^1.2.10",
+    "@biomejs/biome": "^2.0.6",
+    "@types/bun": "^1.2.17",
+    "@types/node": "^24.0.3",
     "@types/yargs": "^17.0.33",
     "bun-style-loader": "^0.4.0",
-    "eslint": "^9.24.0",
-    "eslint-config-prettier": "^10.1.2",
-    "eslint-plugin-prettier": "^5.2.6",
-    "jiti": "^2.4.2",
-    "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
-    "sass": "^1.86.3",
-    "type-fest": "^4.40.0",
-    "typescript-eslint": "^8.30.1",
     "winston": "^3.17.0",
-    "yargs": "^17.7.2"
-  },
-  "peerDependencies": {
-    "typescript": "^5.8.3"
+    "yargs": "17"
   },
   "bugs": {
-    "url": "https://github.com/genzj/bun-ts-userscript-starter/issues"
+    "url": "https://github.com/webdevsk/bun-ts-userscript-starter/issues"
   },
   "description": "A Greasemonkey/Tampermonkey/Violentmonkey Bun + TypeScript boilerplate",
-  "homepage": "https://github.com/genzj/bun-ts-userscript-starter#readme",
+  "homepage": "https://github.com/webdevsk/bun-ts-userscript-starter#readme",
   "license": "MIT",
   "scripts": {
     "build": "bun build.ts",
     "build:dev": "bun build.ts --dev",
     "build:watch": "bun build.ts --dev --watch",
     "build:workflow": "bun build.ts --release-channel GitHubRelease",
-    "build:greasyfork": "bun build.ts --dev --release-channel OutOfBand",
+    "build:greasyfork": "biome lint && tsc --noEmit && bun build.ts --release-channel OutOfBand",
     "clean": "rimraf ./dist/",
-    "dev": "bun build.ts --dev --server --watch",
-    "lint": "eslint ./"
+    "dev": "bun build.ts --dev --server --watch"
   },
   "type": "module",
   "userscriptHeader": {
-    "@match": [
-      "http*://example.com/",
-      "http*://www.example.com/"
-    ],
-    "@require": [
-      "https://raw.githubusercontent.com/webdevsk/AM-userscript-library/refs/heads/main/AM-userscript-library.user.js"
-    ],
+    "@name": null,
+    "@match": ["*://*"],
+    "@icon": null,
+    "@require": null,
     "@grant": [
-      "GM.addStyle"
-    ]
+      "GM_getValue",
+      "GM_setValue",
+      "GM_addStyle",
+      "GM_addValueChangeListener",
+      "GM_removeValueChangeListener"
+    ],
+    "@run-at": "document-end",
+    "@downloadURL": null,
+    "@updateURL": null
   }
 }
